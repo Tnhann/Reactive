@@ -1,5 +1,8 @@
 import React from 'react';
-import { StyleSheet, Text, View, ScrollView, TouchableOpacity } from 'react-native';
+import { StyleSheet, View, ScrollView, TouchableOpacity } from 'react-native';
+import { ThemedText } from '@/components/ThemedText';
+import { ThemedView } from '@/components/ThemedView';
+import { useColorScheme } from '@/hooks/useColorScheme';
 
 // Sample lesson content based on lesson ID
 const lessonContents = {
@@ -93,68 +96,69 @@ const lessonContents = {
 export default function LessonDetailScreen({ route }) {
   const { id, title, description, duration } = route.params;
   const lessonContent = lessonContents[id] || { title: title, sections: [] };
+  const colorScheme = useColorScheme();
 
   return (
-    <ScrollView style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.title}>{title}</Text>
-        <Text style={styles.description}>{description}</Text>
-        <Text style={styles.duration}>Süre: {duration}</Text>
-      </View>
+    <ThemedView style={styles.container}>
+      <ScrollView>
+        <ThemedView style={styles.header}>
+          <ThemedText style={styles.title}>{title}</ThemedText>
+          <ThemedText style={styles.description}>{description}</ThemedText>
+          <ThemedText style={styles.duration}>Süre: {duration}</ThemedText>
+        </ThemedView>
 
-      <View style={styles.content}>
-        {lessonContent.sections.map((section, index) => (
-          <View key={index} style={styles.section}>
-            <Text style={styles.sectionTitle}>{section.title}</Text>
-            <Text style={styles.sectionContent}>{section.content}</Text>
-          </View>
-        ))}
-      </View>
+        <ThemedView style={styles.content}>
+          {lessonContent.sections.map((section, index) => (
+            <ThemedView key={index} style={styles.section}>
+              <ThemedText style={styles.sectionTitle}>{section.title}</ThemedText>
+              <ThemedText style={styles.sectionContent}>{section.content}</ThemedText>
+            </ThemedView>
+          ))}
+        </ThemedView>
 
-      <View style={styles.buttonContainer}>
-        <TouchableOpacity style={styles.button}>
-          <Text style={styles.buttonText}>Tamamlandı Olarak İşaretle</Text>
-        </TouchableOpacity>
-      </View>
-    </ScrollView>
+        <View style={styles.buttonContainer}>
+          <TouchableOpacity style={styles.button}>
+            <ThemedText style={styles.buttonText}>Tamamlandı Olarak İşaretle</ThemedText>
+          </TouchableOpacity>
+        </View>
+      </ScrollView>
+    </ThemedView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
   },
   header: {
     padding: 20,
-    backgroundColor: '#fff',
     borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
+    borderBottomColor: 'rgba(150, 150, 150, 0.2)',
   },
   title: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#0066cc',
     marginBottom: 8,
   },
   description: {
     fontSize: 16,
-    color: '#555',
+    opacity: 0.8,
     marginBottom: 8,
   },
   duration: {
     fontSize: 14,
-    color: '#888',
+    opacity: 0.6,
   },
   content: {
     padding: 20,
   },
   section: {
     marginBottom: 24,
-    backgroundColor: '#fff',
     borderRadius: 8,
     padding: 16,
     elevation: 1,
+    borderWidth: 1,
+    borderColor: 'rgba(150, 150, 150, 0.2)',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.1,
@@ -163,13 +167,11 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#0066cc',
     marginBottom: 8,
   },
   sectionContent: {
     fontSize: 16,
     lineHeight: 24,
-    color: '#333',
   },
   buttonContainer: {
     padding: 20,

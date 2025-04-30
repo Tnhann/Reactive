@@ -1,22 +1,40 @@
-import React, { useState } from 'react';
-import { StyleSheet, TouchableOpacity, View, Image, TextInput, Switch, Alert, ScrollView } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { StyleSheet, TouchableOpacity, View, Image, TextInput, Switch, Alert, ScrollView, ActivityIndicator } from 'react-native';
 import { router } from 'expo-router';
 import { IconSymbol } from '@/components/ui/IconSymbol';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import ParallaxScrollView from '@/components/ParallaxScrollView';
+import { useAuth } from '@/contexts/AuthContext';
 
 export default function ProfileScreen() {
-  // Kullanıcı bilgileri (gerçek uygulamada bir veritabanından gelir)
+  const { user: authUser, logout, updateUserProfile, loading: authLoading } = useAuth();
+
+  // Kullanıcı bilgileri
   const [user, setUser] = useState({
-    name: 'Kullanıcı Adı',
-    email: 'kullanici@example.com',
-    avatar: 'https://reactnative.dev/img/tiny_logo.png',
-    bio: 'React Native öğrenmeye çalışan bir geliştirici.',
-    notificationsEnabled: true,
-    darkModeEnabled: false,
-    language: 'Türkçe',
+    name: authUser?.displayName || 'Kullanıcı Adı',
+    email: authUser?.email || 'kullanici@example.com',
+    avatar: authUser?.photoURL || 'https://reactnative.dev/img/tiny_logo.png',
+    bio: authUser?.bio || 'React Native öğrenmeye çalışan bir geliştirici.',
+    notificationsEnabled: authUser?.notificationsEnabled || true,
+    darkModeEnabled: authUser?.darkModeEnabled || true,
+    language: authUser?.language || 'Türkçe',
   });
+
+  // Auth kullanıcısı değiştiğinde state'i güncelle
+  useEffect(() => {
+    if (authUser) {
+      setUser({
+        name: authUser.displayName || 'Kullanıcı Adı',
+        email: authUser.email || 'kullanici@example.com',
+        avatar: authUser.photoURL || 'https://reactnative.dev/img/tiny_logo.png',
+        bio: authUser.bio || 'React Native öğrenmeye çalışan bir geliştirici.',
+        notificationsEnabled: authUser.notificationsEnabled || true,
+        darkModeEnabled: authUser.darkModeEnabled || true,
+        language: authUser.language || 'Türkçe',
+      });
+    }
+  }, [authUser]);
 
   // Form durumları
   const [isEditing, setIsEditing] = useState(false);
@@ -24,20 +42,35 @@ export default function ProfileScreen() {
   const [editedBio, setEditedBio] = useState(user.bio);
 
   // Düzenleme modunu aç/kapat
-  const toggleEditMode = () => {
+  const toggleEditMode = async () => {
     if (isEditing) {
-      // Değişiklikleri kaydet
-      setUser({
-        ...user,
-        name: editedName,
-        bio: editedBio,
-      });
+      try {
+        // Firebase'e değişiklikleri kaydet
+        await updateUserProfile({
+          displayName: editedName,
+          bio: editedBio
+        });
 
-      Alert.alert(
-        'Başarılı',
-        'Profil bilgileriniz güncellendi.',
-        [{ text: 'Tamam' }]
-      );
+        // Yerel state'i güncelle
+        setUser({
+          ...user,
+          name: editedName,
+          bio: editedBio,
+        });
+
+        Alert.alert(
+          'Başarılı',
+          'Profil bilgileriniz güncellendi.',
+          [{ text: 'Tamam' }]
+        );
+      } catch (error: any) {
+        Alert.alert(
+          'Hata',
+          'Profil bilgileriniz güncellenirken bir hata oluştu.',
+          [{ text: 'Tamam' }]
+        );
+        console.error('Profil güncelleme hatası:', error);
+      }
     } else {
       // Düzenleme modunu aç
       setEditedName(user.name);
@@ -48,7 +81,7 @@ export default function ProfileScreen() {
   };
 
   // Çıkış işlemi
-  const handleLogout = () => {
+  const handleLogout = async () => {
     Alert.alert(
       'Çıkış Yap',
       'Hesabınızdan çıkış yapmak istediğinize emin misiniz?',
@@ -57,11 +90,28 @@ export default function ProfileScreen() {
         {
           text: 'Çıkış Yap',
           style: 'destructive',
-          onPress: () => router.replace('/auth/login')
+          onPress: async () => {
+            try {
+              await logout();
+              router.replace('/auth/login');
+            } catch (error) {
+              Alert.alert('Hata', 'Çıkış yapılırken bir hata oluştu.');
+              console.error('Çıkış hatası:', error);
+            }
+          }
         }
       ]
     );
   };
+
+  // Yükleme durumunda yükleme göstergesi göster
+  if (authLoading) {
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+        <ActivityIndicator size="large" color="#0066cc" />
+      </View>
+    );
+  }
 
   return (
     <ParallaxScrollView
@@ -142,7 +192,19 @@ export default function ProfileScreen() {
           </View>
           <Switch
             value={user.notificationsEnabled}
-            onValueChange={(value) => setUser({ ...user, notificationsEnabled: value })}
+            onValueChange={async (value) => {
+              try {
+                // Firebase'e değişiklikleri kaydet
+                await updateUserProfile({
+                  notificationsEnabled: value
+                });
+
+                // Yerel state'i güncelle
+                setUser({ ...user, notificationsEnabled: value });
+              } catch (error) {
+                console.error('Bildirim ayarı güncellenirken hata:', error);
+              }
+            }}
             trackColor={{ false: '#767577', true: '#0066cc' }}
             thumbColor="#f4f3f4"
           />
@@ -155,7 +217,19 @@ export default function ProfileScreen() {
           </View>
           <Switch
             value={user.darkModeEnabled}
-            onValueChange={(value) => setUser({ ...user, darkModeEnabled: value })}
+            onValueChange={async (value) => {
+              try {
+                // Firebase'e değişiklikleri kaydet
+                await updateUserProfile({
+                  darkModeEnabled: value
+                });
+
+                // Yerel state'i güncelle
+                setUser({ ...user, darkModeEnabled: value });
+              } catch (error) {
+                console.error('Karanlık mod ayarı güncellenirken hata:', error);
+              }
+            }}
             trackColor={{ false: '#767577', true: '#0066cc' }}
             thumbColor="#f4f3f4"
           />
@@ -232,13 +306,12 @@ const styles = StyleSheet.create({
     borderColor: '#FFFFFF',
   },
   profileContainer: {
-    backgroundColor: '#FFFFFF',
     borderRadius: 16,
     padding: 24,
     marginBottom: 24,
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: '#E0E0E0',
+    borderColor: 'rgba(150, 150, 150, 0.2)',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
@@ -303,12 +376,11 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   settingsContainer: {
-    backgroundColor: '#FFFFFF',
     borderRadius: 16,
     padding: 24,
     marginBottom: 24,
     borderWidth: 1,
-    borderColor: '#E0E0E0',
+    borderColor: 'rgba(150, 150, 150, 0.2)',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
@@ -324,7 +396,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(0, 0, 0, 0.05)',
+    borderBottomColor: 'rgba(150, 150, 150, 0.1)',
   },
   settingInfo: {
     flexDirection: 'row',

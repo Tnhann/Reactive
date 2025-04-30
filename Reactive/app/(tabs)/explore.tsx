@@ -284,7 +284,7 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     paddingHorizontal: 16,
     borderRadius: 20,
-    backgroundColor: 'rgba(0, 0, 0, 0.05)',
+    backgroundColor: 'rgba(150, 150, 150, 0.15)',
     marginRight: 10,
   },
   activeFilter: {
@@ -302,11 +302,10 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   lessonCard: {
-    backgroundColor: '#FFFFFF',
     borderRadius: 12,
     padding: 16,
     borderWidth: 1,
-    borderColor: '#E0E0E0',
+    borderColor: 'rgba(150, 150, 150, 0.2)',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.1,
@@ -383,7 +382,7 @@ const styles = StyleSheet.create({
   progressContainer: {
     flex: 1,
     height: 8,
-    backgroundColor: 'rgba(0, 0, 0, 0.1)',
+    backgroundColor: 'rgba(150, 150, 150, 0.2)',
     borderRadius: 4,
     marginRight: 10,
     overflow: 'hidden',

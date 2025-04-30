@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
-import { StyleSheet, TouchableOpacity, View, TextInput, Image, KeyboardAvoidingView, Platform, ScrollView, Alert } from 'react-native';
+import { StyleSheet, TouchableOpacity, View, TextInput, Image, KeyboardAvoidingView, Platform, ScrollView, Alert, ActivityIndicator } from 'react-native';
 import { router, Link } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { IconSymbol } from '@/components/ui/IconSymbol';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
+import { useAuth } from '@/contexts/AuthContext';
 
 export default function RegisterScreen() {
   const [name, setName] = useState('');
@@ -17,6 +18,7 @@ export default function RegisterScreen() {
   const [emailError, setEmailError] = useState('');
   const [passwordError, setPasswordError] = useState('');
   const [confirmPasswordError, setConfirmPasswordError] = useState('');
+  const { register } = useAuth();
 
   const validateName = (name: string) => {
     if (!name) {
@@ -67,7 +69,7 @@ export default function RegisterScreen() {
     return true;
   };
 
-  const handleRegister = () => {
+  const handleRegister = async () => {
     const isNameValid = validateName(name);
     const isEmailValid = validateEmail(email);
     const isPasswordValid = validatePassword(password);
@@ -79,9 +81,11 @@ export default function RegisterScreen() {
 
     setIsLoading(true);
 
-    // Demo kayıt işlemi (gerçek uygulamada API çağrısı yapılır)
-    setTimeout(() => {
-      setIsLoading(false);
+    try {
+      console.log('Kayıt işlemi başlatılıyor...');
+      // Firebase Authentication ile kayıt ol
+      await register(email, password, name);
+      console.log('Kayıt işlemi başarılı');
 
       // Başarılı kayıt
       Alert.alert(
@@ -94,7 +98,37 @@ export default function RegisterScreen() {
           }
         ]
       );
-    }, 1500);
+    } catch (error: any) {
+      console.error('Kayıt hatası:', error);
+
+      // Hata mesajını kullanıcıya göster
+      let errorMessage = 'Kayıt yapılırken bir hata oluştu. Lütfen tekrar deneyin.';
+      let errorDetails = error.message || '';
+
+      // Firebase hata kodlarına göre özelleştirilmiş mesajlar
+      if (error.code === 'auth/email-already-in-use') {
+        errorMessage = 'Bu e-posta adresi zaten kullanılıyor.';
+      } else if (error.code === 'auth/invalid-email') {
+        errorMessage = 'Geçersiz e-posta adresi.';
+      } else if (error.code === 'auth/weak-password') {
+        errorMessage = 'Şifre çok zayıf. Daha güçlü bir şifre seçin.';
+      } else if (error.code === 'auth/network-request-failed') {
+        errorMessage = 'İnternet bağlantınızı kontrol edin ve tekrar deneyin.';
+      } else if (error.code === 'auth/operation-not-allowed') {
+        errorMessage = 'E-posta/şifre girişi etkinleştirilmemiş. Firebase konsolundan etkinleştirin.';
+      } else if (error.code === 'auth/internal-error') {
+        errorMessage = 'Firebase servisinde bir hata oluştu. Lütfen daha sonra tekrar deneyin.';
+      } else if (error.code === 'firestore/permission-denied') {
+        errorMessage = 'Firestore veritabanına erişim izni yok. Güvenlik kurallarını kontrol edin.';
+      }
+
+      // Hata detaylarını ekle
+      const fullErrorMessage = errorDetails ? `${errorMessage}\n\nHata detayı: ${errorDetails}` : errorMessage;
+
+      Alert.alert('Kayıt Başarısız', fullErrorMessage, [{ text: 'Tamam' }]);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -208,7 +242,6 @@ export default function RegisterScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
   },
   scrollContainer: {
     flexGrow: 1,
@@ -218,7 +251,6 @@ const styles = StyleSheet.create({
   logoContainer: {
     alignItems: 'center',
     marginBottom: 40,
-    backgroundColor: '#FFFFFF',
     padding: 16,
     borderRadius: 16,
   },
@@ -226,7 +258,6 @@ const styles = StyleSheet.create({
     width: 80,
     height: 80,
     marginBottom: 16,
-    backgroundColor: '#FFFFFF',
     borderRadius: 40,
   },
   appName: {
@@ -241,7 +272,6 @@ const styles = StyleSheet.create({
     color: '#333333',
   },
   formContainer: {
-    backgroundColor: '#FFFFFF',
     borderRadius: 16,
     padding: 24,
     shadowColor: '#000',
@@ -250,7 +280,7 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 4,
     borderWidth: 1,
-    borderColor: '#E0E0E0',
+    borderColor: 'rgba(150, 150, 150, 0.2)',
   },
   formTitle: {
     textAlign: 'center',
@@ -259,12 +289,12 @@ const styles = StyleSheet.create({
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.03)',
+    backgroundColor: 'rgba(150, 150, 150, 0.1)',
     borderRadius: 8,
     marginBottom: 12,
     paddingHorizontal: 12,
     borderWidth: 1,
-    borderColor: 'rgba(0, 0, 0, 0.1)',
+    borderColor: 'rgba(150, 150, 150, 0.2)',
   },
   inputIcon: {
     marginRight: 10,

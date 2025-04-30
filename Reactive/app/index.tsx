@@ -1,8 +1,9 @@
 import React, { useEffect } from 'react';
-import { StyleSheet, View, Image, Animated, Dimensions } from 'react-native';
+import { StyleSheet, Image, Animated, Dimensions } from 'react-native';
 import { router } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { ThemedText } from '@/components/ThemedText';
+import { ThemedView } from '@/components/ThemedView';
 
 export default function WelcomeScreen() {
   const fadeAnim = new Animated.Value(0);
@@ -32,7 +33,7 @@ export default function WelcomeScreen() {
   }, []);
 
   return (
-    <View style={styles.container}>
+    <ThemedView style={styles.container}>
       <StatusBar style="auto" />
       <Animated.View
         style={[
@@ -54,20 +55,18 @@ export default function WelcomeScreen() {
           React Native Öğrenme Uygulaması
         </ThemedText>
       </Animated.View>
-    </View>
+    </ThemedView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
     alignItems: 'center',
     justifyContent: 'center',
   },
   logoContainer: {
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
     padding: 30,
     borderRadius: 20,
   },
@@ -75,7 +74,6 @@ const styles = StyleSheet.create({
     width: 120,
     height: 120,
     marginBottom: 24,
-    backgroundColor: '#FFFFFF',
     borderRadius: 60,
   },
   appName: {
@@ -87,6 +85,5 @@ const styles = StyleSheet.create({
   tagline: {
     fontSize: 18,
     textAlign: 'center',
-    color: '#333333',
   },
 });

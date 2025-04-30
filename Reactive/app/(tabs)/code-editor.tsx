@@ -7,11 +7,14 @@ import ParallaxScrollView from '@/components/ParallaxScrollView';
 
 const SAMPLE_CODE = `import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
+import { useColorScheme } from '@/hooks/useColorScheme';
 
 export default function App() {
+  const colorScheme = useColorScheme();
+
   return (
     <View style={styles.container}>
-      <Text style={styles.text}>
+      <Text style={[styles.text, { color: colorScheme === 'dark' ? '#FFFFFF' : '#000000' }]}>
         Merhaba React Native!
       </Text>
     </View>
@@ -23,7 +26,6 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#F5FCFF',
   },
   text: {
     fontSize: 20,
@@ -146,7 +148,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     overflow: 'hidden',
     borderWidth: 1,
-    borderColor: 'rgba(0, 0, 0, 0.1)',
+    borderColor: 'rgba(150, 150, 150, 0.2)',
   },
   toolbar: {
     flexDirection: 'row',
@@ -189,17 +191,16 @@ const styles = StyleSheet.create({
     padding: 12,
     fontSize: 14,
     lineHeight: 20,
-    backgroundColor: '#F0F0F0',
-    color: '#333333',
+    backgroundColor: 'rgba(150, 150, 150, 0.1)',
+    color: '#FFFFFF', // Beyaz metin rengi
     minHeight: 300,
   },
   outputContainer: {
     marginBottom: 20,
     padding: 12,
     borderRadius: 8,
-    backgroundColor: '#FFFFFF',
     borderWidth: 1,
-    borderColor: '#E0E0E0',
+    borderColor: 'rgba(150, 150, 150, 0.2)',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.1,
@@ -223,9 +224,9 @@ const styles = StyleSheet.create({
     marginBottom: 30,
     padding: 16,
     borderRadius: 8,
-    backgroundColor: '#F0F0F0',
+    backgroundColor: 'rgba(150, 150, 150, 0.1)',
     borderWidth: 1,
-    borderColor: '#E0E0E0',
+    borderColor: 'rgba(150, 150, 150, 0.2)',
   },
   tipsTitle: {
     fontSize: 16,

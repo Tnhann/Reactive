@@ -1,5 +1,8 @@
 import React from 'react';
-import { StyleSheet, Text, View, FlatList, TouchableOpacity } from 'react-native';
+import { StyleSheet, FlatList, TouchableOpacity } from 'react-native';
+import { ThemedText } from '@/components/ThemedText';
+import { ThemedView } from '@/components/ThemedView';
+import { useColorScheme } from '@/hooks/useColorScheme';
 
 // Sample lesson data
 const lessons = [
@@ -36,58 +39,58 @@ const lessons = [
 ];
 
 export default function LessonListScreen({ navigation }) {
+  const colorScheme = useColorScheme();
+
   const renderItem = ({ item }) => (
     <TouchableOpacity
       style={styles.lessonItem}
-      onPress={() => navigation.navigate('LessonDetail', { 
+      onPress={() => navigation.navigate('LessonDetail', {
         id: item.id,
         title: item.title,
         description: item.description,
         duration: item.duration
       })}
     >
-      <View style={styles.lessonContent}>
-        <Text style={styles.lessonTitle}>{item.title}</Text>
-        <Text style={styles.lessonDescription}>{item.description}</Text>
-        <Text style={styles.lessonDuration}>Süre: {item.duration}</Text>
-      </View>
+      <ThemedView style={styles.lessonContent}>
+        <ThemedText style={styles.lessonTitle}>{item.title}</ThemedText>
+        <ThemedText style={styles.lessonDescription}>{item.description}</ThemedText>
+        <ThemedText style={styles.lessonDuration}>Süre: {item.duration}</ThemedText>
+      </ThemedView>
     </TouchableOpacity>
   );
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.header}>React Native Dersleri</Text>
+    <ThemedView style={styles.container}>
+      <ThemedText style={styles.header}>React Native Dersleri</ThemedText>
       <FlatList
         data={lessons}
         renderItem={renderItem}
         keyExtractor={item => item.id}
         contentContainerStyle={styles.listContainer}
       />
-    </View>
+    </ThemedView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
   },
   header: {
     fontSize: 22,
     fontWeight: 'bold',
     padding: 16,
-    backgroundColor: '#fff',
-    color: '#0066cc',
   },
   listContainer: {
     padding: 16,
   },
   lessonItem: {
-    backgroundColor: '#fff',
     borderRadius: 8,
     marginBottom: 16,
     overflow: 'hidden',
     elevation: 2,
+    borderWidth: 1,
+    borderColor: 'rgba(150, 150, 150, 0.2)',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.2,
@@ -100,15 +103,14 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: 'bold',
     marginBottom: 8,
-    color: '#0066cc',
   },
   lessonDescription: {
     fontSize: 14,
-    color: '#555',
+    opacity: 0.8,
     marginBottom: 8,
   },
   lessonDuration: {
     fontSize: 12,
-    color: '#888',
+    opacity: 0.6,
   },
 });

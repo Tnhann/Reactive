@@ -14,8 +14,12 @@ export function useColorScheme() {
   const colorScheme = useRNColorScheme();
 
   if (hasHydrated) {
-    return colorScheme;
+    // Varsayılan olarak 'dark' temasını döndür
+    return 'dark';
+
+    // Cihaz temasını kullanmak isterseniz, aşağıdaki satırı açıp yukarıdaki satırı yorum satırı yapabilirsiniz
+    // return colorScheme;
   }
 
-  return 'light';
+  return 'dark';
 }

@@ -1,16 +1,14 @@
 import React, { useState } from 'react';
-import { StyleSheet, TouchableOpacity, View, TextInput, Image, KeyboardAvoidingView, Platform, ScrollView, Alert } from 'react-native';
+import { StyleSheet, TouchableOpacity, View, TextInput, Image, KeyboardAvoidingView, Platform, ScrollView, Alert, ActivityIndicator } from 'react-native';
 import { router, Link } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { IconSymbol } from '@/components/ui/IconSymbol';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
+import { useAuth } from '@/contexts/AuthContext';
 
-// Demo kullanıcılar (gerçek uygulamada bir veritabanında saklanır)
-const DEMO_USERS = [
-  { email: 'demo@example.com', password: 'password123' },
-  { email: 'test@example.com', password: 'test123' },
-];
+// Demo kullanıcı (kolay giriş için)
+const DEMO_USER = { email: 'demo@example.com', password: 'password123' };
 
 export default function LoginScreen() {
   const [email, setEmail] = useState('');
@@ -19,6 +17,7 @@ export default function LoginScreen() {
   const [showPassword, setShowPassword] = useState(false);
   const [emailError, setEmailError] = useState('');
   const [passwordError, setPasswordError] = useState('');
+  const { login } = useAuth();
 
   const validateEmail = (email: string) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -45,7 +44,7 @@ export default function LoginScreen() {
     return true;
   };
 
-  const handleLogin = () => {
+  const handleLogin = async () => {
     const isEmailValid = validateEmail(email);
     const isPasswordValid = validatePassword(password);
 
@@ -55,31 +54,49 @@ export default function LoginScreen() {
 
     setIsLoading(true);
 
-    // Demo giriş işlemi (gerçek uygulamada API çağrısı yapılır)
-    setTimeout(() => {
-      const user = DEMO_USERS.find(
-        (user) => user.email === email && user.password === password
-      );
+    try {
+      console.log('Login sayfası: Giriş işlemi başlatılıyor...');
+      // Firebase Authentication ile giriş yap
+      await login(email, password);
+      console.log('Login sayfası: Giriş başarılı, yönlendiriliyor...');
 
-      setIsLoading(false);
-
-      if (user) {
-        // Başarılı giriş
+      // Başarılı giriş - setTimeout ile yönlendirmeyi geciktir
+      setTimeout(() => {
+        console.log('Login sayfası: Yönlendirme yapılıyor...');
         router.replace('/(tabs)');
-      } else {
-        // Başarısız giriş
-        Alert.alert(
-          'Giriş Başarısız',
-          'E-posta veya şifre hatalı. Lütfen tekrar deneyin.',
-          [{ text: 'Tamam' }]
-        );
+      }, 500);
+    } catch (error: any) {
+      console.error('Login sayfası: Giriş hatası:', error);
+
+      // Hata mesajını kullanıcıya göster
+      let errorMessage = 'Giriş yapılırken bir hata oluştu. Lütfen tekrar deneyin.';
+      let errorDetails = error.message || '';
+
+      // Firebase hata kodlarına göre özelleştirilmiş mesajlar
+      if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password') {
+        errorMessage = 'E-posta veya şifre hatalı. Lütfen tekrar deneyin.';
+      } else if (error.code === 'auth/too-many-requests') {
+        errorMessage = 'Çok fazla başarısız giriş denemesi. Lütfen daha sonra tekrar deneyin.';
+      } else if (error.code === 'auth/network-request-failed') {
+        errorMessage = 'İnternet bağlantınızı kontrol edin ve tekrar deneyin.';
+      } else if (error.code === 'auth/invalid-credential') {
+        errorMessage = 'Geçersiz kimlik bilgileri. Lütfen e-posta ve şifrenizi kontrol edin.';
+      } else if (error.code === 'auth/invalid-email') {
+        errorMessage = 'Geçersiz e-posta adresi formatı.';
       }
-    }, 1500);
+
+      // Hata detaylarını ekle
+      const fullErrorMessage = errorDetails ? `${errorMessage}\n\nHata detayı: ${errorDetails}` : errorMessage;
+
+      Alert.alert('Giriş Başarısız', fullErrorMessage, [{ text: 'Tamam' }]);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleDemoLogin = () => {
-    setEmail(DEMO_USERS[0].email);
-    setPassword(DEMO_USERS[0].password);
+    setEmail(DEMO_USER.email);
+    setPassword(DEMO_USER.password);
   };
 
   return (
@@ -183,7 +200,6 @@ export default function LoginScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
   },
   scrollContainer: {
     flexGrow: 1,
@@ -193,7 +209,6 @@ const styles = StyleSheet.create({
   logoContainer: {
     alignItems: 'center',
     marginBottom: 40,
-    backgroundColor: '#FFFFFF',
     padding: 16,
     borderRadius: 16,
   },
@@ -201,7 +216,6 @@ const styles = StyleSheet.create({
     width: 80,
     height: 80,
     marginBottom: 16,
-    backgroundColor: '#FFFFFF',
     borderRadius: 40,
   },
   appName: {
@@ -216,7 +230,6 @@ const styles = StyleSheet.create({
     color: '#333333',
   },
   formContainer: {
-    backgroundColor: '#FFFFFF',
     borderRadius: 16,
     padding: 24,
     shadowColor: '#000',
@@ -225,7 +238,7 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 4,
     borderWidth: 1,
-    borderColor: '#E0E0E0',
+    borderColor: 'rgba(150, 150, 150, 0.2)',
   },
   formTitle: {
     textAlign: 'center',
@@ -234,12 +247,12 @@ const styles = StyleSheet.create({
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.03)',
+    backgroundColor: 'rgba(150, 150, 150, 0.1)',
     borderRadius: 8,
     marginBottom: 12,
     paddingHorizontal: 12,
     borderWidth: 1,
-    borderColor: 'rgba(0, 0, 0, 0.1)',
+    borderColor: 'rgba(150, 150, 150, 0.2)',
   },
   inputIcon: {
     marginRight: 10,
@@ -289,7 +302,7 @@ const styles = StyleSheet.create({
   orLine: {
     flex: 1,
     height: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.1)',
+    backgroundColor: 'rgba(150, 150, 150, 0.2)',
   },
   orText: {
     marginHorizontal: 10,

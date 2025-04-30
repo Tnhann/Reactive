@@ -1,11 +1,12 @@
-import { Image, StyleSheet, TouchableOpacity, View, Animated, Alert } from 'react-native';
+import { Image, StyleSheet, TouchableOpacity, View, Animated, Alert, ActivityIndicator } from 'react-native';
 import { router } from 'expo-router';
 import { IconSymbol } from '@/components/ui/IconSymbol';
-import { useRef, useEffect } from 'react';
+import { useRef, useEffect, useState } from 'react';
 
 import ParallaxScrollView from '@/components/ParallaxScrollView';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
+import { useAuth } from '@/contexts/AuthContext';
 
 export default function HomeScreen() {
   const navigateTo = (route: string) => {
@@ -17,16 +18,18 @@ export default function HomeScreen() {
   const slideAnim = useRef(new Animated.Value(50)).current;
   const scaleAnim = useRef(new Animated.Value(0.9)).current;
 
-  // Kullanıcı bilgileri (gerçek uygulamada bir veritabanından gelir)
-  const user = {
-    name: 'Kullanıcı',
+  // Firebase'den kullanıcı bilgilerini al
+  const { user: authUser, logout, loading: authLoading } = useAuth();
+
+  // İlerleme verileri (gerçek uygulamada Firestore'dan gelir)
+  const [progressData, setProgressData] = useState({
     completedLessons: 3,
     totalLessons: 5,
     lastActivity: '2 saat önce',
-  };
+  });
 
   // Çıkış işlemi
-  const handleLogout = () => {
+  const handleLogout = async () => {
     Alert.alert(
       'Çıkış Yap',
       'Hesabınızdan çıkış yapmak istediğinize emin misiniz?',
@@ -35,7 +38,15 @@ export default function HomeScreen() {
         {
           text: 'Çıkış Yap',
           style: 'destructive',
-          onPress: () => router.replace('/auth/login')
+          onPress: async () => {
+            try {
+              await logout();
+              router.replace('/auth/login');
+            } catch (error) {
+              Alert.alert('Hata', 'Çıkış yapılırken bir hata oluştu.');
+              console.error('Çıkış hatası:', error);
+            }
+          }
         }
       ]
     );
@@ -62,6 +73,15 @@ export default function HomeScreen() {
     ]).start();
   }, []);
 
+  // Yükleme durumunda yükleme göstergesi göster
+  if (authLoading) {
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+        <ActivityIndicator size="large" color="#0066cc" />
+      </View>
+    );
+  }
+
   return (
     <ParallaxScrollView
       headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
@@ -76,7 +96,7 @@ export default function HomeScreen() {
       <View style={styles.header}>
         <View>
           <ThemedText style={styles.welcomeText}>Hoş Geldin,</ThemedText>
-          <ThemedText style={styles.userName}>{user.name}</ThemedText>
+          <ThemedText style={styles.userName}>{authUser?.displayName || 'Kullanıcı'}</ThemedText>
         </View>
         <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
           <IconSymbol size={24} name="rectangle.portrait.and.arrow.right" color="#0066cc" />
@@ -95,7 +115,7 @@ export default function HomeScreen() {
         <View style={styles.progressInfo}>
           <View style={styles.progressItem}>
             <IconSymbol size={24} name="book.fill" color="#0066cc" />
-            <ThemedText style={styles.progressValue}>{user.completedLessons}/{user.totalLessons}</ThemedText>
+            <ThemedText style={styles.progressValue}>{progressData.completedLessons}/{progressData.totalLessons}</ThemedText>
             <ThemedText style={styles.progressLabel}>Dersler</ThemedText>
           </View>
 
@@ -103,7 +123,7 @@ export default function HomeScreen() {
 
           <View style={styles.progressItem}>
             <IconSymbol size={24} name="clock.fill" color="#0066cc" />
-            <ThemedText style={styles.progressValue}>{user.lastActivity}</ThemedText>
+            <ThemedText style={styles.progressValue}>{progressData.lastActivity}</ThemedText>
             <ThemedText style={styles.progressLabel}>Son Aktivite</ThemedText>
           </View>
         </View>
@@ -244,12 +264,11 @@ const styles = StyleSheet.create({
 
   // Progress card styles
   progressCard: {
-    backgroundColor: '#FFFFFF',
     borderRadius: 16,
     padding: 16,
     marginBottom: 24,
     borderWidth: 1,
-    borderColor: '#E0E0E0',
+    borderColor: 'rgba(150, 150, 150, 0.2)',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.1,
@@ -289,7 +308,7 @@ const styles = StyleSheet.create({
   },
   progressDivider: {
     width: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.1)',
+    backgroundColor: 'rgba(150, 150, 150, 0.2)',
   },
 
   // Title section styles
@@ -333,7 +352,6 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     textAlign: 'center',
     fontSize: 20,
-    color: '#333333',
   },
   featureGrid: {
     flexDirection: 'row',
@@ -341,13 +359,12 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   featureCard: {
-    backgroundColor: '#FFFFFF',
     borderRadius: 16,
     padding: 16,
     width: '30%',
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: '#E0E0E0',
+    borderColor: 'rgba(150, 150, 150, 0.2)',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.15,
@@ -371,12 +388,11 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: 'bold',
     textAlign: 'center',
-    color: '#333333',
   },
   featureDescription: {
     fontSize: 12,
     textAlign: 'center',
-    color: '#666666',
+    opacity: 0.7,
     lineHeight: 16,
   },
 
